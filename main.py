@@ -181,15 +181,27 @@ class Solution:
                                   parts=[]
                                   )
 
+def remove_last(lst, str):
+    rev = list(reversed(lst))
+    rev.remove(str)
+    return list(reversed(rev))
+
+
+def remove_last_number(lst):
+    rev = list(reversed(lst))
+    for str in rev:
+        if str.isdigit():
+            string = str
+            break
+    rev.remove(string)
+    return list(reversed(rev))
 
 def countdownNumbers(numbers: List[int], target: int) -> set[str]:
-    operators = ['+', '-', '*', '/']
+    operators = ['+', '()+', '()-',  '-', '*', '/']
     sols = []
     print(f'{numbers} and the target, {target}')
 
-    def recursCountdownNumbers(num, rem_numbers: List[int], next_target: int, next_operator: str, current_product: int, eq_parts: List):
-        if next_target == 0:
-            return
+    def recursCountdownNumbers(num, rem_numbers: List[int], next_target: int, next_operator: str, current_product: int, bracketed_product, eq_parts: List):
         if next_operator == '+' or num == 0:
             new_product = num
             total_change = num
@@ -206,12 +218,13 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
             total_change = new_product - current_product
 
         new_target = next_target - total_change
-        # print(f'trying {"".join(eq_parts[1:])}, remaining target {new_target}')
+        bracketed_product += total_change
+        print(f'trying {"".join(eq_parts[1:])}, remaining target {new_target}')
         if len(eq_parts) >= 2:
             eq = ''.join(eq_parts[1:])
             res = eval(eq)
             if res != target - new_target:
-                # print(eq + ' = ' + str(res), target - new_target, total_change)
+                print(eq + ' = ' + str(res), target - new_target, total_change)
                 return
 
         if new_target == 0:
@@ -224,22 +237,47 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
             return
 
         for operator in operators:
-            eq_parts.append(operator)
+            if len(eq_parts) > 1 and operator[0:2] == '()':
+                last_num = eq_parts[-1]
+                new_operator = operator[-1]
+                rear_bracket_added = True
+                if last_num == ')':
+                    eq_parts.pop()
+                    front_bracket_added = False
+                else:
+                    eq_parts.remove(last_num)
+                    eq_parts.append("(")
+                    bracketed_product = int(last_num)
+                    front_bracket_added = True
+                    eq_parts.append(last_num)
+            else:
+                front_bracket_added = False
+                rear_bracket_added = False
+                new_operator = operator
+            eq_parts.append(new_operator)
             for number in reversed(rem_numbers):
                 eq_parts.append(str(number))
+                if rear_bracket_added and operator[0:2] == '()':
+                    eq_parts.append(")")
+                    new_product = bracketed_product
                 rem_numbers.remove(number)
-                # breakpoint()
-                recursCountdownNumbers(number, rem_numbers, new_target, operator, new_product, eq_parts)
-                # breakpoint()
+                recursCountdownNumbers(number, rem_numbers, new_target, new_operator, new_product, bracketed_product, eq_parts)
                 rem_numbers.append(number)
-                eq_parts.pop()
-            eq_parts.pop()
+
+                if rear_bracket_added and operator[0:2] == '()':
+                    eq_parts = remove_last(eq_parts, ')')
+                eq_parts = remove_last_number(eq_parts)
+            if front_bracket_added and operator[0:2] == '()':
+                eq_parts = remove_last(eq_parts, '(')
+
+            eq_parts = remove_last(eq_parts, new_operator)
         return set(sols)
     sols = recursCountdownNumbers(num=0,
                                   rem_numbers=numbers,
                                   next_target=target,
                                   next_operator='+',
                                   current_product=1,
+                                  bracketed_product=0,
                                   eq_parts=[],
                                   )
     print(f'All solutions: {sols}')
@@ -250,13 +288,13 @@ import numpy as np
 
 
 def main():
-    while True:
-        try:
-            numbers = [int(input(f'Number {num+1}:')) for num in range(6)]
-            target = int(input('and the target:'))
-            countdownNumbers(numbers, target)
-        except ValueError:
-            print("Only input numbers")
+    # while True:
+    #     try:
+    #         numbers = [int(input(f'Number {num+1}:')) for num in range(6)]
+    #         target = int(input('and the target:'))
+    #         countdownNumbers(numbers, target)
+    #     except ValueError:
+    #         print("Only input numbers")
 
 
     # sol = Solution()
@@ -268,6 +306,7 @@ def main():
     # print(f'num: 123 target: 6 result: {countdownNumbers([1,2,3], 6)}')
     # print(f'num: 232 target: 8 result: {countdownNumbers([3,2,2], 8)}')
     # solutions = countdownNumbers([50, 100, 10, 1, 3, 9], 602)
+    countdownNumbers([37, 4, 1, 5, 10, 6], 649)
     # print(f'num: 105 target: 5 result: {countdownNumbers("105", 5)}')
     # print(f'num: 000  target: 0 result: {countdownNumbers("000", 0)}')
     # print(f'num: 3456237490  target: 9191 result: {sol.addOperators("3456237490", 9191)}')
