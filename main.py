@@ -197,7 +197,9 @@ def remove_last_number(lst):
     return list(reversed(rev))
 
 def countdownNumbers(numbers: List[int], target: int) -> set[str]:
-    operators = ['+', '()+', '()-',  '-', '*', '/']
+    operators = ['+',
+                 # '()+', '()-',
+                 '-', '*', '/']
     sols = []
     print(f'{numbers} and the target, {target}')
 
@@ -213,13 +215,14 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
             total_change = new_product - current_product
         elif next_operator == '/':
             new_product = current_product / num
-            if new_product != int(new_product):
-                return
+            # if new_product != int(new_product):
+            #     return
             total_change = new_product - current_product
 
         new_target = next_target - total_change
         bracketed_product += total_change
-        print(f'trying {"".join(eq_parts[1:])}, remaining target {new_target}')
+        print(f'trying {"".join(eq_parts[1:])}, remaining numbers {rem_numbers}')
+        # breakpoint()
         if len(eq_parts) >= 2:
             eq = ''.join(eq_parts[1:])
             res = eval(eq)
@@ -255,22 +258,25 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
                 rear_bracket_added = False
                 new_operator = operator
             eq_parts.append(new_operator)
-            for number in reversed(rem_numbers):
-                eq_parts.append(str(number))
-                if rear_bracket_added and operator[0:2] == '()':
-                    eq_parts.append(")")
-                    new_product = bracketed_product
-                rem_numbers.remove(number)
-                recursCountdownNumbers(number, rem_numbers, new_target, new_operator, new_product, bracketed_product, eq_parts)
-                rem_numbers.append(number)
+            number = rem_numbers[0]
+            eq_parts.append(str(number))
+            if rear_bracket_added and operator[0:2] == '()':
+                eq_parts.append(")")
+                new_product = bracketed_product
+            recursCountdownNumbers(number, rem_numbers[1:], new_target, new_operator, new_product, bracketed_product, eq_parts)
+            # breakpoint()
+            # recursCountdownNumbers(number, list(reversed(rem_numbers)), new_target, new_operator, new_product, bracketed_product, eq_parts)
 
-                if rear_bracket_added and operator[0:2] == '()':
-                    eq_parts = remove_last(eq_parts, ')')
-                eq_parts = remove_last_number(eq_parts)
+            # breakpoint()
+            if rear_bracket_added and operator[0:2] == '()':
+                eq_parts = remove_last(eq_parts, ')')
+            eq_parts = remove_last_number(eq_parts)
             if front_bracket_added and operator[0:2] == '()':
                 eq_parts = remove_last(eq_parts, '(')
 
-            eq_parts = remove_last(eq_parts, new_operator)
+            # eq_parts = remove_last(eq_parts, new_operator)
+            eq_parts.pop()
+            # breakpoint()
         return set(sols)
     sols = recursCountdownNumbers(num=0,
                                   rem_numbers=numbers,
