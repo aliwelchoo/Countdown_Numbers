@@ -167,7 +167,6 @@ class Solution:
                     eq = ''.join(parts[1:])
                     sols.append(eq)
                 return
-
             for operator in operators:
                 recursAddOperators(idx + 1, new_target, operator, new_product, product_before_last_multiply, parts)
                 parts.pop()
@@ -182,14 +181,18 @@ class Solution:
                                   )
 
 
-def countdownNumbers(numbers: List[int], target: int) -> set[str]:
+def InOrderNumbers(numbers: List[int], target: int) -> set[str]:
     operators = ['+', '-', '*', '/']
     sols = []
     print(f'{numbers} and the target, {target}')
 
-    def recursCountdownNumbers(num, rem_numbers: List[int], next_target: int, next_operator: str, current_product: int, eq_parts: List):
-        if next_target == 0:
-            return
+    def recursInOrderNumbers(idx, next_target: int, next_operator: str, current_product: int, eq_parts: List):
+
+        num = numbers[idx]
+        char = str(num)
+        eq_parts.append(next_operator)
+        eq_parts.append(char)
+
         if next_operator == '+' or num == 0:
             new_product = num
             total_change = num
@@ -206,12 +209,10 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
             total_change = new_product - current_product
 
         new_target = next_target - total_change
-        # print(f'trying {"".join(eq_parts[1:])}, remaining target {new_target}')
         if len(eq_parts) >= 2:
             eq = ''.join(eq_parts[1:])
             res = eval(eq)
             if res != target - new_target:
-                # print(eq + ' = ' + str(res), target - new_target, total_change)
                 return
 
         if new_target == 0:
@@ -220,23 +221,15 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
                 print(f'First solution: {eq}')
             sols.append(eq)
             return
-        if len(rem_numbers) == 0:
+        if idx == len(numbers)-1:
             return
-
         for operator in operators:
-            eq_parts.append(operator)
-            for number in reversed(rem_numbers):
-                eq_parts.append(str(number))
-                rem_numbers.remove(number)
-                # breakpoint()
-                recursCountdownNumbers(number, rem_numbers, new_target, operator, new_product, eq_parts)
-                # breakpoint()
-                rem_numbers.append(number)
-                eq_parts.pop()
+            recursInOrderNumbers(idx+1, new_target, operator, new_product, eq_parts)
+            eq_parts.pop()
             eq_parts.pop()
         return set(sols)
-    sols = recursCountdownNumbers(num=0,
-                                  rem_numbers=numbers,
+
+    sols = recursInOrderNumbers(idx=0,
                                   next_target=target,
                                   next_operator='+',
                                   current_product=1,
@@ -246,28 +239,71 @@ def countdownNumbers(numbers: List[int], target: int) -> set[str]:
     print(f'Verified all add to target: {np.all([eval(sol) for sol in sols])}')
     return sols
 
+from itertools import permutations
+
+
+def CountdownNumbers(numbers: List[int], target: int) -> set[str]:
+    operators = ['+', '-', '*', '/']
+    sols = []
+    print(f'{numbers} and the target, {target}')
+
+    def recursCountdownNumbers(eq_parts: List):
+        if len(numbers) == 1:
+            return
+        for n1, n2 in permutations(numbers, 2):
+            numbers.remove(n1)
+            numbers.remove(n2)
+            for operator in operators:
+                if n2 == 0 and operator == '/':
+                    continue
+                new_calc = str(n1) + operator + str(n2)
+                new_number = eval(new_calc)
+                new_equation = f'{new_calc}={new_number}\n'
+                if new_number < 0:
+                    continue
+                if new_number == target:
+                    eq = ''.join(eq_parts + [new_equation])
+                    sols.append(eq)
+                    print(eq)
+                else:
+                    numbers.append(new_number)
+                    eq_parts.append(new_equation)
+                    recursCountdownNumbers(eq_parts)
+                    eq_parts.remove(new_equation)
+                    numbers.remove(new_number)
+            numbers.append(n1)
+            numbers.append(n2)
+            if len(sols) > 0:
+                break
+        return set(sols)
+
+    sols = recursCountdownNumbers(eq_parts=[])
+    print(f'All solutions: {sols}')
+    return sols
+
+
 import numpy as np
 
 
 def main():
-    while True:
-        try:
-            numbers = [int(input(f'Number {num+1}:')) for num in range(6)]
-            target = int(input('and the target:'))
-            countdownNumbers(numbers, target)
-        except ValueError:
-            print("Only input numbers")
+    # while True:
+    #     try:
+    #         numbers = [int(input(f'Number {num+1}:')) for num in range(6)]
+    #         target = int(input('and the target:'))
+    #         countdownNumbers(numbers, target)
+    #     except ValueError:
+    #         print("Only input numbers")
 
 
-    # sol = Solution()
+    sol = Solution()
     # print(f'num: 123 target: 6 result: {sol.addOperators("123", 6)}')
     # print(f'num: 232 target: 8 result: {sol.addOperators("232", 8)}')
     # print(f'num: 105 target: 5 result: {sol.addOperators("105", 5)}')
     # print(f'num: 000  target: 0 result: {sol.addOperators("000", 0)}')
     # print(f'num: 3456237490  target: 9191 result: {sol.addOperators("3456237490", 9191)}')
-    # print(f'num: 123 target: 6 result: {countdownNumbers([1,2,3], 6)}')
-    # print(f'num: 232 target: 8 result: {countdownNumbers([3,2,2], 8)}')
-    # solutions = countdownNumbers([50, 100, 10, 1, 3, 9], 602)
+    # print(f'num: 123 target: 6 result: {CountdownNumbers([1,2,3], 6)}')
+    # print(f'num: 232 target: 8 result: {InOrderNumbers([4,2,2], 8)}')
+    solutions = CountdownNumbers([50, 100, 10, 1, 3, 9], 602)
     # print(f'num: 105 target: 5 result: {countdownNumbers("105", 5)}')
     # print(f'num: 000  target: 0 result: {countdownNumbers("000", 0)}')
     # print(f'num: 3456237490  target: 9191 result: {sol.addOperators("3456237490", 9191)}')
